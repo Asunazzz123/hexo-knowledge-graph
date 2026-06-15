@@ -21,6 +21,15 @@
     default: "#7a8294"
   };
 
+  var CLUSTER_LABELS = {
+    ai: "AI/ML",
+    cs: "CS 基础",
+    math: "数学",
+    reading: "Reading",
+    industry: "工业应用",
+    core: "其他"
+  };
+
   var LINK_COLOR = "rgba(160, 160, 180, 0.16)";
   var LINK_HIGHLIGHT_COLOR = "rgba(120, 170, 255, 0.50)";
   var LINK_DIMMED_COLOR = "rgba(160, 160, 180, 0.04)";
@@ -526,27 +535,9 @@
     detailStats.className = "hexo-knowledge-graph__detail-stats";
     detail.append(detailClose, detailTitle, detailStats);
 
-    // Legend
+    // Legend — populated dynamically after data loads
     var legend = documentRef.createElement("div");
     legend.className = "hexo-knowledge-graph__legend";
-    var clusterLabels = [
-      { id: "ai", label: "AI/ML" },
-      { id: "cs", label: "CS基础" },
-      { id: "math", label: "数学" },
-      { id: "reading", label: "阅读" },
-      { id: "industry", label: "工业" }
-    ];
-    for (var j = 0; j < clusterLabels.length; j++) {
-      var item = documentRef.createElement("span");
-      item.className = "hexo-knowledge-graph__legend-item";
-      var dot = documentRef.createElement("span");
-      dot.className = "hexo-knowledge-graph__legend-dot";
-      dot.style.backgroundColor = CLUSTER_COLORS[clusterLabels[j].id] || CLUSTER_COLORS.default;
-      var labelSpan = documentRef.createElement("span");
-      labelSpan.textContent = clusterLabels[j].label;
-      item.append(dot, labelSpan);
-      legend.appendChild(item);
-    }
 
     var canvas = documentRef.createElement("div");
     canvas.className = "hexo-knowledge-graph__canvas";
@@ -1173,9 +1164,40 @@
         element.knowledgeGraphThemeObserver = themeObserver;
       }
 
+      // ── Populate legend from actual data ──────────────────────────
+      function buildLegend(graphData) {
+        if (!legend) return;
+        var nodes = Array.isArray(graphData.nodes) ? graphData.nodes : [];
+        // Collect unique clusters from category nodes
+        var seenClusters = new Set();
+        for (var i = 0; i < nodes.length; i++) {
+          var n = nodes[i];
+          if (n.type === "category" && n.cluster) {
+            seenClusters.add(n.cluster);
+          }
+        }
+        if (!seenClusters.size) return;
+        // Clear and rebuild
+        legend.innerHTML = "";
+        var clusters = Array.from(seenClusters).sort();
+        for (var j = 0; j < clusters.length; j++) {
+          var cid = clusters[j];
+          var item = documentRef.createElement("span");
+          item.className = "hexo-knowledge-graph__legend-item";
+          var dot = documentRef.createElement("span");
+          dot.className = "hexo-knowledge-graph__legend-dot";
+          dot.style.backgroundColor = CLUSTER_COLORS[cid] || CLUSTER_COLORS.default;
+          var labelSpan = documentRef.createElement("span");
+          labelSpan.textContent = CLUSTER_LABELS[cid] || cid;
+          item.append(dot, labelSpan);
+          legend.appendChild(item);
+        }
+      }
+
       // ── Load data and start ────────────────────────────────────
       return loadGraphData(dataUrl, fetchImpl).then(function (data) {
         fullGraphData = data;
+        buildLegend(data);
         expandBtn.hidden = false;
         resetBtn.hidden = true;
         applyGraphData();
