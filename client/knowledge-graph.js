@@ -715,27 +715,26 @@
       var charge = graphInstance.d3Force("charge");
       if (charge) {
         charge.strength(function (node) {
-          if (node.type === "category") return -320;
-          if (node.layer === "bridge") return -180;
-          return -90;
+          if (node.type === "category") return -140;
+          if (node.layer === "bridge") return -110;
+          return -70;
         });
       }
       var linkForce = graphInstance.d3Force("link");
       if (linkForce) {
         linkForce.distance(function (link) {
-          if (link.type === "category") return 70;
-          if (link.type === "inter-category") return 90;
-          if (link.type === "reference") return 60;
-          return 65;
+          if (link.type === "category") return 80;
+          if (link.type === "inter-category") return 55;
+          if (link.type === "reference") return 65;
+          return 70;
         });
       }
       var center = graphInstance.d3Force("center");
       if (center) {
-        center.strength(0.03);
+        center.strength(0.10);
       }
       var collide = graphInstance.d3Force("collide");
       if (!collide && typeof graphInstance.d3Force === "function") {
-        // Add a subtle collision force to prevent node overlap
         try {
           var d3 = (globalThis.d3 || (typeof require === "function" ? require("d3") : null));
           if (d3) {
@@ -1004,25 +1003,28 @@
             layoutMode = layoutMode === "force" ? "cluster" : "force";
             if (layoutMode === "cluster") {
               this.classList.add("is-active");
-              // Apply stronger centering forces per cluster
+              // Stronger centering — pull categories into a tight inner ring, posts orbit close
               try {
                 if (typeof graphInstance.d3Force === "function") {
                   var chargeForce = graphInstance.d3Force("charge");
                   if (chargeForce) {
                     chargeForce.strength(function (node) {
-                      if (node.type === "category") return -420;
-                      if (node.layer === "bridge") return -200;
-                      return -120;
+                      if (node.type === "category") return -80;
+                      if (node.layer === "bridge") return -60;
+                      return -40;
                     });
                   }
                   var linkForce = graphInstance.d3Force("link");
                   if (linkForce) {
                     linkForce.distance(function (link) {
-                      if (link.type === "category") return 50;
-                      if (link.type === "inter-category") return 70;
-                      return 45;
+                      if (link.type === "category") return 60;
+                      if (link.type === "inter-category") return 35;
+                      if (link.type === "reference") return 45;
+                      return 40;
                     });
                   }
+                  var centerForce = graphInstance.d3Force("center");
+                  if (centerForce) centerForce.strength(0.18);
                 }
               } catch (err) {
                 // Ignore force errors
