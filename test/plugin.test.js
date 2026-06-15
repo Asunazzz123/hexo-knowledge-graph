@@ -151,8 +151,8 @@ test("generator emits graph JSON and local browser assets", async () => {
     "knowledge-graph/knowledge-graph.css",
     "knowledge-graph/force-graph.min.js"
   ]);
-  assert.match(String(routes[0].data), /"topic:ai"/);
-  assert.match(String(routes[0].data), /"type":"topic"/);
+  assert.match(String(routes[0].data), /"nodes":\[\]/);
+  assert.match(String(routes[0].data), /"bridgePostCount"/);
   assert.equal(typeof routes[1].data, "function");
   assert.equal(typeof routes[2].data, "function");
   assert.equal(typeof routes[3].data, "function");

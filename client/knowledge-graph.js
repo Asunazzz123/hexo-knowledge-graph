@@ -92,11 +92,20 @@
     var links = Array.isArray(graph.links) ? graph.links : [];
 
     if (!selectedCategoryId) {
+      var filteredNodes = nodes
+        .filter(function (node) { return node.type === "category" || node.layer === "bridge"; })
+        .map(function (node) { return cloneNode(node, false); });
+      var visibleIds = new Set();
+      for (var i = 0; i < filteredNodes.length; i++) {
+        visibleIds.add(filteredNodes[i].id);
+      }
       return annotateRefCounts({
-        nodes: nodes
-          .filter(function (node) { return node.type === "category" || node.type === "topic"; })
-          .map(function (node) { return cloneNode(node, false); }),
-        links: links.filter(function (link) { return link.type === "topic"; })
+        nodes: filteredNodes,
+        links: links.filter(function (link) {
+          return (link.type === "category" || link.type === "reference" || link.type === "inter-category")
+            && visibleIds.has(endpointId(link.source))
+            && visibleIds.has(endpointId(link.target));
+        })
       });
     }
 
@@ -206,12 +215,12 @@
     return link && link.type === "reference" ? [5, 7] : [];
   }
 
-  // ── Node sizing — Obsidian: small dots ───────────────────────
+  // ── Node sizing — categories as root, posts as leaves ──────────
 
   function resolveNodeRadius(node) {
-    if (node.type === "topic") return (node.size || 6) * 0.6;
-    if (node.type === "category") return 7;
-    var base = node.visitor ? 3 : 4.5;
+    if (node.type === "category") return 9;
+    if (node.layer === "bridge") return 6.5;
+    var base = node.visitor ? 3 : (node.layer === "core" ? 7 : 4.5);
     var refBonus = Math.min((node.refCount || 0) * 0.8, 3.5);
     return base + refBonus;
   }
@@ -234,12 +243,13 @@
 
     var isDimmed = hoveredNode && node.id !== hoveredNode && !connectedNodeIds.has(node.id);
 
-    if (node.type === "topic") {
-      var clusterColor = CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default;
-      return isDimmed ? colorWithAlpha(clusterColor, 0.12) : colorWithAlpha(clusterColor, 0.70);
-    }
     if (node.type === "category") {
-      return isDimmed ? colorWithAlpha("#8899aa", 0.12) : "#8899aa";
+      var clusterColor = CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default;
+      return isDimmed ? colorWithAlpha(clusterColor, 0.15) : colorWithAlpha(clusterColor, 0.80);
+    }
+    if (node.layer === "bridge") {
+      var bridgeColor = CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default;
+      return isDimmed ? colorWithAlpha(bridgeColor, 0.12) : colorWithAlpha(bridgeColor, 0.55);
     }
     if (node.visitor) {
       return isDimmed ? colorWithAlpha("#5a5d6e", 0.08) : "#5a5d6e";
@@ -255,8 +265,9 @@
     var isSelected = state.selectedNode === node.id;
     var isNeighbor = state.connectedNodeIds.has(node.id);
     var isDimmed = state.hoveredNode && !isHovered && !isNeighbor;
+    var isCoreLayer = node.type === "category" || node.layer === "bridge";
     var showLabel = state.labelMode === "all"
-      || (state.labelMode === "important" && (node.type === "topic" || node.type === "category"))
+      || (state.labelMode === "important" && isCoreLayer)
       || isHovered
       || isSelected;
 
@@ -264,11 +275,11 @@
       ctx.globalAlpha = 0.18;
     }
 
-    // Glow ring for hovered, selected, or important topic nodes
-    if (isHovered || isSelected || (node.type === "topic" && node.layer === "core")) {
+    // Glow ring for hovered, selected, or category (root) nodes
+    if (isHovered || isSelected || node.type === "category") {
       var glowRadius = radius * (isHovered || isSelected ? 2.8 : 1.8);
       var glowAlpha = isHovered || isSelected ? 0.28 : 0.10;
-      var glowColor = node.type === "topic"
+      var glowColor = node.type === "category"
         ? (CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default)
         : "#8ab4f8";
 
@@ -286,8 +297,8 @@
     ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
     ctx.fillStyle = resolveNodeColor(node, state);
 
-    // Subtle ring for important nodes
-    if (node.type === "topic" && node.layer === "core" && !isHovered && !isSelected) {
+    // Subtle ring for category nodes
+    if (node.type === "category" && !isHovered && !isSelected) {
       ctx.fill();
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius + 1.2, 0, 2 * Math.PI);
@@ -322,8 +333,8 @@
     // Label — positioned to the right of the node
     if (showLabel) {
       var label = String(node.name || "");
-      var fontSize = Math.max(4, (node.type === "topic" && node.layer === "core") ? 12 / globalScale : 11 / globalScale);
-      var fontWeight = (node.type === "topic" && node.layer === "core") ? "520" : "400";
+      var fontSize = Math.max(4, (node.type === "category") ? 12 / globalScale : 11 / globalScale);
+      var fontWeight = (node.type === "category") ? "520" : "400";
       var labelX = node.x + radius + 5 / globalScale;
       var labelY = node.y + fontSize * 0.35;
 
@@ -336,7 +347,7 @@
           isHovered || isSelected ? "#d0d0e8" : LABEL_COLOR
         );
         ctx.globalAlpha = isDimmed ? 0.25 : (isHovered || isSelected ? 0.95 : (
-          node.type === "topic" ? 0.82 : 0.60
+          node.type === "category" ? 0.85 : 0.60
         ));
         ctx.fillText(label, labelX, labelY);
         ctx.restore();
@@ -415,8 +426,7 @@
       post: "#6e7385",
       visitor: "#4a4d5e",
       categoryLink: LINK_COLOR,
-      referenceLink: LINK_COLOR,
-      topic: CLUSTER_COLORS.default
+      referenceLink: LINK_COLOR
     };
   }
 
@@ -620,7 +630,7 @@
       statsHtml += '<div class="hexo-knowledge-graph__detail-stat"><span>知识簇</span><span>' + clusterName + '</span></div>';
     }
     if (node.type) {
-      var typeLabel = { topic: "主题节点", category: "分类", post: "文章" };
+      var typeLabel = { category: "分类节点", post: "文章" };
       statsHtml += '<div class="hexo-knowledge-graph__detail-stat"><span>类型</span><span>' + (typeLabel[node.type] || node.type) + '</span></div>';
     }
     statsHtml += '<div class="hexo-knowledge-graph__detail-stat"><span>关联节点</span><span>' + neighborCount + '</span></div>';
@@ -672,23 +682,15 @@
     var nodes = Array.isArray(graphData.nodes) ? graphData.nodes : [];
     var links = Array.isArray(graphData.links) ? graphData.links : [];
 
-    // In compact mode, show only core layer nodes + category nodes + topic→topic links + category-topic links
+    // Compact mode: categories (root nodes) + bridge posts + inter-category/reference links
     var visibleNodeIds = new Set();
     var filteredNodes = [];
 
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-      if (node.layer === "core" || node.type === "category") {
+      if (node.type === "category" || node.layer === "bridge") {
         visibleNodeIds.add(node.id);
         filteredNodes.push(node);
-      }
-    }
-
-    // Also include topic nodes directly connected to visible nodes
-    for (var j = 0; j < nodes.length; j++) {
-      if (!visibleNodeIds.has(nodes[j].id) && nodes[j].type === "topic" && nodes[j].size >= 7) {
-        visibleNodeIds.add(nodes[j].id);
-        filteredNodes.push(nodes[j]);
       }
     }
 
@@ -713,18 +715,17 @@
       var charge = graphInstance.d3Force("charge");
       if (charge) {
         charge.strength(function (node) {
-          if (node.type === "topic" && node.layer === "core") return -280;
-          if (node.type === "topic") return -180;
-          if (node.type === "category") return -160;
+          if (node.type === "category") return -320;
+          if (node.layer === "bridge") return -180;
           return -90;
         });
       }
       var linkForce = graphInstance.d3Force("link");
       if (linkForce) {
         linkForce.distance(function (link) {
-          if (link.type === "topic") return 55;
-          if (link.type === "category-topic" || link.type === "post-topic") return 80;
           if (link.type === "category") return 70;
+          if (link.type === "inter-category") return 90;
+          if (link.type === "reference") return 60;
           return 65;
         });
       }
@@ -1009,15 +1010,17 @@
                   var chargeForce = graphInstance.d3Force("charge");
                   if (chargeForce) {
                     chargeForce.strength(function (node) {
-                      if (node.type === "topic" && node.layer === "core") return -380;
+                      if (node.type === "category") return -420;
+                      if (node.layer === "bridge") return -200;
                       return -120;
                     });
                   }
                   var linkForce = graphInstance.d3Force("link");
                   if (linkForce) {
                     linkForce.distance(function (link) {
-                      if (link.type === "topic") return 40;
-                      return 60;
+                      if (link.type === "category") return 50;
+                      if (link.type === "inter-category") return 70;
+                      return 45;
                     });
                   }
                 }

@@ -123,7 +123,7 @@ test("uses dashed lines only for post references", () => {
 });
 
 test("renders category roots larger than posts and visitor nodes (Obsidian small-dot sizing)", () => {
-  assert.equal(nodeValue({ type: "category" }), 7);
+  assert.equal(nodeValue({ type: "category" }), 9);
   assert.equal(nodeValue({ type: "post" }), 4.5);
   assert.equal(nodeValue({ type: "post", visitor: true }), 3);
   assert.equal(nodeValue({ type: "post", refCount: 3 }), 6.9);
