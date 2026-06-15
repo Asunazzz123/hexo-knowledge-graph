@@ -5,7 +5,8 @@
   width: 100%;
   margin: 1.5rem 0 2rem;
   color: #c8c8d0;
-  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* Inherit font-family from the page so canvas labels match the theme's body font */
+  font-family: inherit;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -19,9 +20,11 @@
 }
 
 .hexo-knowledge-graph__title {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 350;
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 0.625rem;
+  border-left: 3px solid rgba(138, 180, 248, 0.45);
+  font-size: 1.5rem;
+  font-weight: 550;
   letter-spacing: 0.04em;
   color: #d0d0dc;
 }

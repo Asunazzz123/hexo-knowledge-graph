@@ -340,7 +340,7 @@
 
       if (label) {
         ctx.save();
-        ctx.font = fontWeight + " " + fontSize + "px \"Helvetica Neue\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif";
+        ctx.font = fontWeight + " " + fontSize + "px " + (state.fontFamily || CANVAS_FONT_FALLBACK);
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         ctx.fillStyle = isDimmed ? LABEL_COLOR_DIM : (
@@ -409,6 +409,24 @@
     var color = getComputedStyleImpl(element).color;
     if (!color) return fallback;
     return { default: color, visitor: color };
+  }
+
+  // Canvas text doesn't inherit CSS font-family. Read it from the
+  // host element so the graph labels match the theme's body font.
+  var CANVAS_FONT_FALLBACK = "\"Helvetica Neue\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif";
+
+  function resolveFontFamily(element, getComputedStyleImpl) {
+    if (!element || typeof getComputedStyleImpl !== "function") {
+      return CANVAS_FONT_FALLBACK;
+    }
+    var fontFamily = getComputedStyleImpl(element).fontFamily;
+    if (!fontFamily || fontFamily === "serif" || fontFamily === "sans-serif") {
+      // Browser may return a bare generic name when no explicit family is set;
+      // fall back to a readable CJK-capable stack.
+      return CANVAS_FONT_FALLBACK;
+    }
+    // Preserve the resolved family but append our fallback as a safety net.
+    return fontFamily + ", " + CANVAS_FONT_FALLBACK;
   }
 
   function resolveGraphColors(element, getComputedStyleImpl, baseColors) {
@@ -814,6 +832,9 @@
       var fitTimer = null;
       var searchIndex = [];
       var currentViewNodes = [];
+      // Resolve font-family from the host element so canvas labels inherit the theme's body font
+      var getCS = options.getComputedStyle || (windowRef && windowRef.getComputedStyle) || globalThis.getComputedStyle;
+      var resolvedFontFamily = resolveFontFamily(element, typeof getCS === "function" ? getCS : null);
 
       var clearSchedule = options.clearSchedule || globalThis.clearTimeout;
 
@@ -824,7 +845,8 @@
           selectedNode: selectedNode ? selectedNode.id : null,
           connectedNodeIds: connectedNodeIds,
           labelMode: labelMode,
-          layoutMode: layoutMode
+          layoutMode: layoutMode,
+          fontFamily: resolvedFontFamily
         };
       }
 
