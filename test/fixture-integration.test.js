@@ -82,14 +82,17 @@ test("generates graph JSON from Hexo Collection-style locals", async () => {
   // Knowledge map enrichment adds bridge post and inter-category link counts
   assert.equal(typeof graph.meta.bridgePostCount, "number");
   assert.equal(typeof graph.meta.interCategoryLinkCount, "number");
+  // Palette is included in metadata
+  assert.ok(Array.isArray(graph.meta.palette));
+  assert.ok(graph.meta.palette.length > 0);
   // Check that real post data is still present
   assert.ok(graph.nodes.some(function (n) { return n.type === "post" && n.name === "DeepNet"; }));
   assert.ok(graph.nodes.some(function (n) { return n.type === "post" && n.name === "LayerNorm"; }));
   var linkTypes = graph.links.map(function (link) { return link.type; });
   assert.ok(linkTypes.includes("category"));
   assert.ok(linkTypes.includes("reference"));
-  // Nodes should have cluster and layer annotations
+  // Nodes should have colorIndex and layer annotations
   var catNode = graph.nodes.find(function (n) { return n.type === "category"; });
-  assert.equal(typeof catNode.cluster, "string");
+  assert.equal(typeof catNode.colorIndex, "number");
   assert.equal(catNode.layer, "core");
 });

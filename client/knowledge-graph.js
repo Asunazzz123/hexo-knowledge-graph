@@ -12,23 +12,16 @@
 
   // ── Obsidian-inspired palette ──────────────────────────────────
 
-  var CLUSTER_COLORS = {
-    ai: "#7aa2f7",
-    cs: "#41a6b5",
-    math: "#bb9af7",
-    reading: "#e0af68",
-    industry: "#f7768e",
-    default: "#7a8294"
-  };
+  var CATEGORY_PALETTE = [
+    "#7aa2f7", "#41a6b5", "#bb9af7", "#e0af68", "#f7768e",
+    "#9ece6a", "#7dcfff", "#ff9e64", "#c0caf5", "#73daca",
+    "#f0c75e", "#5ea3b0", "#d59bf6", "#f48fb1", "#80cbc4"
+  ];
 
-  var CLUSTER_LABELS = {
-    ai: "AI/ML",
-    cs: "CS 基础",
-    math: "数学",
-    reading: "Reading",
-    industry: "工业应用",
-    core: "其他"
-  };
+  function getNodeColor(node) {
+    var idx = typeof node.colorIndex === "number" ? node.colorIndex : 0;
+    return CATEGORY_PALETTE[idx % CATEGORY_PALETTE.length];
+  }
 
   var LINK_COLOR = "rgba(160, 160, 180, 0.16)";
   var LINK_HIGHLIGHT_COLOR = "rgba(120, 170, 255, 0.50)";
@@ -253,11 +246,11 @@
     var isDimmed = hoveredNode && node.id !== hoveredNode && !connectedNodeIds.has(node.id);
 
     if (node.type === "category") {
-      var clusterColor = CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default;
-      return isDimmed ? colorWithAlpha(clusterColor, 0.15) : colorWithAlpha(clusterColor, 0.80);
+      var catColor = getNodeColor(node);
+      return isDimmed ? colorWithAlpha(catColor, 0.15) : colorWithAlpha(catColor, 0.80);
     }
     if (node.layer === "bridge") {
-      var bridgeColor = CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default;
+      var bridgeColor = getNodeColor(node);
       return isDimmed ? colorWithAlpha(bridgeColor, 0.12) : colorWithAlpha(bridgeColor, 0.55);
     }
     if (node.visitor) {
@@ -288,9 +281,7 @@
     if (isHovered || isSelected || node.type === "category") {
       var glowRadius = radius * (isHovered || isSelected ? 2.8 : 1.8);
       var glowAlpha = isHovered || isSelected ? 0.28 : 0.10;
-      var glowColor = node.type === "category"
-        ? (CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default)
-        : "#8ab4f8";
+      var glowColor = node.type === "category" ? getNodeColor(node) : "#8ab4f8";
 
       var glow = ctx.createRadialGradient(node.x, node.y, radius * 0.3, node.x, node.y, glowRadius);
       glow.addColorStop(0, colorWithAlpha(glowColor, glowAlpha));
@@ -311,10 +302,7 @@
       ctx.fill();
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius + 1.2, 0, 2 * Math.PI);
-      ctx.strokeStyle = colorWithAlpha(
-        CLUSTER_COLORS[node.cluster] || CLUSTER_COLORS.default,
-        0.30
-      );
+      ctx.strokeStyle = colorWithAlpha(getNodeColor(node), 0.30);
       ctx.lineWidth = 0.8;
       ctx.stroke();
     } else {
@@ -603,6 +591,7 @@
 
     var neighborCount = 0;
     var graphLinks = graphData && graphData.links ? graphData.links : [];
+    var graphNodes = graphData && graphData.nodes ? graphData.nodes : [];
     for (var i = 0; i < graphLinks.length; i++) {
       var link = graphLinks[i];
       if (endpointId(link.source) === node.id || endpointId(link.target) === node.id) {
@@ -610,15 +599,25 @@
       }
     }
 
-    var clusterName = "";
-    if (node.cluster) {
-      var clusterLabels = { ai: "AI / ML", cs: "CS 基础", math: "数学", reading: "Reading", industry: "工业应用" };
-      clusterName = clusterLabels[node.cluster] || node.cluster;
+    // Find parent category for cluster context
+    var parentCatName = "";
+    if (node.type === "category") {
+      parentCatName = node.name;
+    } else {
+      for (var li = 0; li < graphLinks.length; li++) {
+        var glink = graphLinks[li];
+        if (glink.type === "category"
+          && endpointId(glink.target) === node.id) {
+          var srcId = endpointId(glink.source);
+          var srcNode = graphNodes.find(function (n) { return n.id === srcId && n.type === "category"; });
+          if (srcNode) { parentCatName = srcNode.name; break; }
+        }
+      }
     }
 
     var statsHtml = "";
-    if (clusterName) {
-      statsHtml += '<div class="hexo-knowledge-graph__detail-stat"><span>知识簇</span><span>' + clusterName + '</span></div>';
+    if (parentCatName) {
+      statsHtml += '<div class="hexo-knowledge-graph__detail-stat"><span>所属分类</span><span>' + parentCatName + '</span></div>';
     }
     if (node.type) {
       var typeLabel = { category: "分类节点", post: "文章" };
@@ -1168,27 +1167,29 @@
       function buildLegend(graphData) {
         if (!legend) return;
         var nodes = Array.isArray(graphData.nodes) ? graphData.nodes : [];
-        // Collect unique clusters from category nodes
-        var seenClusters = new Set();
+        // Collect unique category nodes (each is its own color)
+        var catList = [];
+        var seenNames = new Set();
         for (var i = 0; i < nodes.length; i++) {
           var n = nodes[i];
-          if (n.type === "category" && n.cluster) {
-            seenClusters.add(n.cluster);
+          if (n.type === "category" && n.name && !seenNames.has(n.name)) {
+            seenNames.add(n.name);
+            catList.push(n);
           }
         }
-        if (!seenClusters.size) return;
-        // Clear and rebuild
+        if (!catList.length) return;
+        // Sort by name for stable display
+        catList.sort(function (a, b) { return String(a.name).localeCompare(String(b.name), "zh"); });
         legend.innerHTML = "";
-        var clusters = Array.from(seenClusters).sort();
-        for (var j = 0; j < clusters.length; j++) {
-          var cid = clusters[j];
+        for (var j = 0; j < catList.length; j++) {
+          var cat = catList[j];
           var item = documentRef.createElement("span");
           item.className = "hexo-knowledge-graph__legend-item";
           var dot = documentRef.createElement("span");
           dot.className = "hexo-knowledge-graph__legend-dot";
-          dot.style.backgroundColor = CLUSTER_COLORS[cid] || CLUSTER_COLORS.default;
+          dot.style.backgroundColor = getNodeColor(cat);
           var labelSpan = documentRef.createElement("span");
-          labelSpan.textContent = CLUSTER_LABELS[cid] || cid;
+          labelSpan.textContent = cat.name;
           item.append(dot, labelSpan);
           legend.appendChild(item);
         }
