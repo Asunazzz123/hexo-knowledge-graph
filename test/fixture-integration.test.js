@@ -79,8 +79,16 @@ test("generates graph JSON from Hexo Collection-style locals", async () => {
   assert.equal(graph.meta.categoryCount, 1);
   assert.equal(graph.meta.postCount, 2);
   assert.equal(graph.meta.referenceCount, 1);
-  assert.deepEqual(
-    graph.links.map((link) => link.type),
-    ["category", "category", "reference"]
-  );
+  // Knowledge map enrichment adds topic nodes and links
+  assert.equal(typeof graph.meta.topicCount, "number");
+  assert.ok(graph.meta.topicCount > 0);
+  assert.equal(typeof graph.meta.topicLinkCount, "number");
+  assert.ok(graph.meta.topicLinkCount > 0);
+  // Check that real post data is still present
+  assert.ok(graph.nodes.some(function (n) { return n.type === "post" && n.name === "DeepNet"; }));
+  assert.ok(graph.nodes.some(function (n) { return n.type === "post" && n.name === "LayerNorm"; }));
+  var linkTypes = graph.links.map(function (link) { return link.type; });
+  assert.ok(linkTypes.includes("category"));
+  assert.ok(linkTypes.includes("reference"));
+  assert.ok(linkTypes.includes("topic"));
 });

@@ -89,7 +89,7 @@ test("normalizes snake-case Hexo configuration", () => {
   assert.equal(config.dataUrl, "/knowledge-graph/graph.json");
 });
 
-test("renders escaped mount attributes", () => {
+test("renders escaped mount attributes with Obsidian-style toolbar and detail panel", () => {
   const html = renderMount({
     id: 'graph"><script>',
     title: "<Knowledge>",
@@ -100,6 +100,11 @@ test("renders escaped mount attributes", () => {
   assert.match(html, /id="graph&quot;&gt;&lt;script&gt;"/);
   assert.match(html, /&lt;Knowledge&gt;/);
   assert.doesNotMatch(html, /<script>alert/);
+  assert.match(html, /hexo-knowledge-graph__canvas-wrap/);
+  assert.match(html, /hexo-knowledge-graph__toolbar/);
+  assert.match(html, /hexo-knowledge-graph__detail/);
+  assert.match(html, /hexo-knowledge-graph__legend/);
+  assert.match(html, /hexo-knowledge-graph__expand-btn/);
 });
 
 test("registers generator, helper, tag, and standard Injector assets", () => {
@@ -146,13 +151,14 @@ test("generator emits graph JSON and local browser assets", async () => {
     "knowledge-graph/knowledge-graph.css",
     "knowledge-graph/force-graph.min.js"
   ]);
-  assert.match(String(routes[0].data), /"nodes":\[\]/);
+  assert.match(String(routes[0].data), /"topic:ai"/);
+  assert.match(String(routes[0].data), /"type":"topic"/);
   assert.equal(typeof routes[1].data, "function");
   assert.equal(typeof routes[2].data, "function");
   assert.equal(typeof routes[3].data, "function");
 });
 
-test("ships an opaque graph background fallback for theme compatibility", () => {
+test("ships an Obsidian dark canvas wrapper with gradient background", () => {
   const css = fs.readFileSync(
     path.join(__dirname, "..", "assets", "knowledge-graph.css"),
     "utf8"
@@ -160,6 +166,10 @@ test("ships an opaque graph background fallback for theme compatibility", () => 
 
   assert.match(
     css,
-    /background-color:\s*var\(--body-bg-color,\s*#fff\)/
+    /canvas-wrap/
+  );
+  assert.match(
+    css,
+    /linear-gradient\(155deg,\s*#0f0d17/
   );
 });

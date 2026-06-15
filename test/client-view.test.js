@@ -4,11 +4,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  colorWithAlpha,
   createGraphController,
   disposeElement,
   linkLineDash,
   nodeValue,
   normalizePagePath,
+  resolveGraphColors,
   resolveLabelColors,
   scheduleZoomToFit,
   shouldAutoMount,
@@ -120,10 +122,12 @@ test("uses dashed lines only for post references", () => {
   assert.deepEqual(linkLineDash({ type: "category" }), []);
 });
 
-test("renders category roots larger than posts and visitor nodes", () => {
-  assert.equal(nodeValue({ type: "category" }), 90);
-  assert.equal(nodeValue({ type: "post" }), 28);
-  assert.equal(nodeValue({ type: "post", visitor: true }), 18);
+test("renders category roots larger than posts and visitor nodes (Obsidian small-dot sizing)", () => {
+  assert.equal(nodeValue({ type: "category" }), 7);
+  assert.equal(nodeValue({ type: "post" }), 4.5);
+  assert.equal(nodeValue({ type: "post", visitor: true }), 3);
+  assert.equal(nodeValue({ type: "post", refCount: 3 }), 6.9);
+  assert.equal(nodeValue({ type: "post", refCount: 10 }), 8);
 });
 
 test("schedules a padded zoom after the focused graph starts moving", () => {
@@ -158,8 +162,8 @@ test("uses the graph container text color for canvas labels", () => {
     visitor: "rgb(224, 226, 232)"
   });
   assert.deepEqual(resolveLabelColors(null, null), {
-    default: "#3c4048",
-    visitor: "#7f8791"
+    default: "#a8a8b8",
+    visitor: "#5a5a6e"
   });
 });
 
@@ -201,4 +205,31 @@ test("disposes observers, timers, and the ForceGraph instance", () => {
   assert.equal(element.dataset.knowledgeGraphMounted, undefined);
   assert.equal(element.knowledgeGraphInstance, undefined);
   assert.equal(element.knowledgeGraphController, undefined);
+});
+
+test("converts hex color to rgba with given alpha", () => {
+  assert.equal(colorWithAlpha("#786395", 0.5), "rgba(120,99,149,0.5)");
+  assert.equal(colorWithAlpha("rgba(120, 99, 149, 0.72)", 0.1), "rgba(120, 99, 149, 0.1)");
+  assert.equal(colorWithAlpha("#fff", 0.3), "rgba(255,255,255,0.3)");
+});
+
+test("resolves dark-theme graph colors when html has data-theme dark", () => {
+  const base = {
+    category: "#786395",
+    post: "#e3ae63",
+    visitor: "#d7dbe1",
+    categoryLink: "rgba(120, 99, 149, 0.72)",
+    referenceLink: "rgba(150, 158, 170, 0.42)"
+  };
+  const element = {
+    ownerDocument: {
+      documentElement: { matches: function (sel) { return sel.includes("dark"); } }
+    }
+  };
+  const colors = resolveGraphColors(element, function () { return ({}); }, base);
+  assert.equal(colors.category, "#8899aa");
+  assert.equal(colors.post, "#6e7385");
+
+  const lightColors = resolveGraphColors(null, null, base);
+  assert.equal(lightColors.category, "#786395");
 });

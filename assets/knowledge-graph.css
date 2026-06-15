@@ -1,72 +1,411 @@
+/* Hexo Knowledge Graph — Obsidian-inspired dark theme */
+/* Canvas background: deep violet-black with subtle light blooms */
+
 .hexo-knowledge-graph {
   width: 100%;
   margin: 1.5rem 0 2rem;
-  color: var(--text-color, inherit);
+  color: #c8c8d0;
+  font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
+
+/* ── Header ─────────────────────────────────────────────── */
 
 .hexo-knowledge-graph__header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: .75rem;
+  margin-bottom: 0.625rem;
 }
 
 .hexo-knowledge-graph__title {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.75rem;
+  font-weight: 350;
+  letter-spacing: 0.04em;
+  color: #d0d0dc;
+}
+
+.hexo-knowledge-graph__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hexo-knowledge-graph__expand-btn {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  color: #9898a8;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+.hexo-knowledge-graph__expand-btn:hover {
+  color: #c8c8e0;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .hexo-knowledge-graph__reset {
-  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  border-radius: 999px;
-  padding: .38rem .8rem;
-  color: inherit;
-  background: color-mix(in srgb, currentColor 7%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  color: #9898a8;
+  background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+.hexo-knowledge-graph__reset:hover {
+  color: #c8c8e0;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* ── Canvas wrapper — Obsidian dark gradient with light blooms ── */
+
+.hexo-knowledge-graph__canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: var(--hexo-knowledge-graph-height, 620px);
+  min-height: 400px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  /* Obsidian dark violet-black gradient */
+  background:
+    /* subtle bloom top-left */
+    radial-gradient(ellipse 420px 320px at 18% 12%, rgba(90, 70, 140, 0.10), transparent 70%),
+    /* subtle bloom bottom-right */
+    radial-gradient(ellipse 360px 280px at 78% 82%, rgba(60, 80, 130, 0.08), transparent 70%),
+    /* subtle bloom center-right */
+    radial-gradient(ellipse 280px 240px at 65% 45%, rgba(70, 75, 120, 0.06), transparent 65%),
+    /* base gradient */
+    linear-gradient(155deg, #0f0d17 0%, #11131a 40%, #14161f 70%, #161820 100%);
 }
 
 .hexo-knowledge-graph__canvas {
   width: 100%;
-  height: var(--hexo-knowledge-graph-height, 620px);
-  min-height: 360px;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
-  border-radius: 14px;
-  background-color: var(--body-bg-color, #fff);
-  background-color: var(--grey-0, var(--body-bg-color, #fff));
-  background-image:
-    radial-gradient(circle at 25% 20%, rgba(120, 99, 149, .10), transparent 34%),
-    radial-gradient(circle at 75% 70%, rgba(108, 157, 160, .10), transparent 36%);
+  height: 100%;
   cursor: grab;
 }
-
 .hexo-knowledge-graph__canvas:active {
   cursor: grabbing;
 }
 
+/* ── Toolbar — Obsidian-style right-side buttons ────────── */
+
+.hexo-knowledge-graph__toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 10;
+}
+
+.hexo-knowledge-graph__toolbar button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  background: rgba(12, 10, 20, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #7a7a92;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+.hexo-knowledge-graph__toolbar button:hover {
+  color: #c0c0d8;
+  background: rgba(22, 20, 34, 0.82);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+.hexo-knowledge-graph__toolbar button.is-active {
+  color: #8ab4f8;
+  border-color: rgba(138, 180, 248, 0.28);
+  background: rgba(30, 28, 48, 0.82);
+}
+
+.hexo-knowledge-graph__toolbar-divider {
+  width: 18px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 3px 6px;
+}
+
+/* ── Search ─────────────────────────────────────────────── */
+
+.hexo-knowledge-graph__search {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+.hexo-knowledge-graph__search-input {
+  width: 160px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  background: rgba(12, 10, 20, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #c8c8d8;
+  font-size: 11.5px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.hexo-knowledge-graph__search-input::placeholder {
+  color: #4e4e60;
+}
+.hexo-knowledge-graph__search-input:focus {
+  border-color: rgba(138, 180, 248, 0.35);
+  width: 195px;
+}
+
+.hexo-knowledge-graph__search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  background: rgba(12, 10, 20, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  max-height: 180px;
+  overflow-y: auto;
+  display: none;
+}
+.hexo-knowledge-graph__search-dropdown.is-open {
+  display: block;
+}
+.hexo-knowledge-graph__search-item {
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: #9898a8;
+  transition: all 0.12s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hexo-knowledge-graph__search-item:hover {
+  background: rgba(138, 180, 248, 0.10);
+  color: #c8c8d8;
+}
+.hexo-knowledge-graph__search-item .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Detail panel — Obsidian-style floating card ────────── */
+
+.hexo-knowledge-graph__detail {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 210px;
+  max-width: calc(100% - 56px);
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(12, 10, 20, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #b0b0c0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+.hexo-knowledge-graph__detail.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.hexo-knowledge-graph__detail-title {
+  font-size: 13px;
+  font-weight: 550;
+  color: #dcdcf0;
+  margin-bottom: 8px;
+  padding-right: 16px;
+  letter-spacing: 0.02em;
+}
+.hexo-knowledge-graph__detail-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hexo-knowledge-graph__detail-stat {
+  display: flex;
+  justify-content: space-between;
+  color: #787890;
+}
+.hexo-knowledge-graph__detail-stat span:last-child {
+  color: #b0b0c0;
+}
+.hexo-knowledge-graph__detail-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #5a5a70;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s ease;
+}
+.hexo-knowledge-graph__detail-close:hover {
+  color: #b0b0c8;
+}
+
+/* ── Legend / cluster indicator ─────────────────────────── */
+
+.hexo-knowledge-graph__legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  z-index: 5;
+  pointer-events: none;
+}
+.hexo-knowledge-graph__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: #787890;
+  letter-spacing: 0.02em;
+}
+.hexo-knowledge-graph__legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Status ─────────────────────────────────────────────── */
+
 .hexo-knowledge-graph__status {
-  margin: .6rem 0 0;
-  color: color-mix(in srgb, currentColor 65%, transparent);
-  font-size: .85rem;
+  margin: 0.5rem 0 0;
+  color: rgba(160, 160, 180, 0.45);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 .hexo-knowledge-graph.is-ready .hexo-knowledge-graph__status {
   display: none;
 }
-
-.hexo-knowledge-graph.is-error .hexo-knowledge-graph__canvas {
+.hexo-knowledge-graph.is-error .hexo-knowledge-graph__canvas-wrap {
   display: none;
 }
 
-@media (max-width: 720px) {
-  .hexo-knowledge-graph__canvas {
-    height: min(var(--hexo-knowledge-graph-height, 620px), 68vh);
-    min-height: 420px;
-  }
+/* ── Canvas fade-in on load ─────────────────────────────── */
 
+.hexo-knowledge-graph__canvas-wrap {
+  animation: kg-canvas-fade-in 0.7s ease-out;
+}
+
+@keyframes kg-canvas-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .hexo-knowledge-graph__canvas-wrap {
+    height: min(var(--hexo-knowledge-graph-height, 620px), 60vh);
+    min-height: 380px;
+    border-radius: 8px;
+  }
   .hexo-knowledge-graph__header {
     align-items: flex-start;
     flex-direction: column;
+    gap: 0.4rem;
+  }
+  .hexo-knowledge-graph__title {
+    font-size: 1.4rem;
+  }
+  .hexo-knowledge-graph__toolbar {
+    top: 6px;
+    right: 6px;
+    gap: 4px;
+  }
+  .hexo-knowledge-graph__toolbar button {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .hexo-knowledge-graph__search-input {
+    width: 120px;
+    font-size: 11px;
+  }
+  .hexo-knowledge-graph__search-input:focus {
+    width: 150px;
+  }
+  .hexo-knowledge-graph__detail {
+    width: 170px;
+    padding: 10px 12px;
+    bottom: 8px;
+    right: 8px;
+    font-size: 11px;
+  }
+  .hexo-knowledge-graph__legend {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hexo-knowledge-graph__toolbar {
+    top: 4px;
+    right: 4px;
+  }
+  .hexo-knowledge-graph__toolbar button {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+  .hexo-knowledge-graph__search-input {
+    width: 100px;
+  }
+  .hexo-knowledge-graph__search-input:focus {
+    width: 130px;
+  }
+  .hexo-knowledge-graph__detail {
+    width: 150px;
+    padding: 8px 10px;
+    bottom: 6px;
+    right: 40px;
   }
 }
