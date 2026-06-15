@@ -1,0 +1,72 @@
+.hexo-knowledge-graph {
+  width: 100%;
+  margin: 1.5rem 0 2rem;
+  color: var(--text-color, inherit);
+}
+
+.hexo-knowledge-graph__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .75rem;
+}
+
+.hexo-knowledge-graph__title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.hexo-knowledge-graph__reset {
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 999px;
+  padding: .38rem .8rem;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  cursor: pointer;
+}
+
+.hexo-knowledge-graph__canvas {
+  width: 100%;
+  height: var(--hexo-knowledge-graph-height, 620px);
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 14px;
+  background-color: var(--body-bg-color, #fff);
+  background-color: var(--grey-0, var(--body-bg-color, #fff));
+  background-image:
+    radial-gradient(circle at 25% 20%, rgba(120, 99, 149, .10), transparent 34%),
+    radial-gradient(circle at 75% 70%, rgba(108, 157, 160, .10), transparent 36%);
+  cursor: grab;
+}
+
+.hexo-knowledge-graph__canvas:active {
+  cursor: grabbing;
+}
+
+.hexo-knowledge-graph__status {
+  margin: .6rem 0 0;
+  color: color-mix(in srgb, currentColor 65%, transparent);
+  font-size: .85rem;
+}
+
+.hexo-knowledge-graph.is-ready .hexo-knowledge-graph__status {
+  display: none;
+}
+
+.hexo-knowledge-graph.is-error .hexo-knowledge-graph__canvas {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .hexo-knowledge-graph__canvas {
+    height: min(var(--hexo-knowledge-graph-height, 620px), 68vh);
+    min-height: 420px;
+  }
+
+  .hexo-knowledge-graph__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,24 @@
+knowledge_graph:
+  enable: true
+  auto_mount: true
+
+  # The graph mounts only on this URL.
+  categories_path: /categories/
+
+  # ShokaX default. Change this selector for another theme.
+  target_selector: .collapse.wrap
+  insert_position: beforebegin
+
+  title: 知识网络
+  height: 620px
+
+  # Tags are intentionally not rendered in version 0.1.
+  include_uncategorized: false
+  uncategorized_label: 未分类
+
+  colors:
+    category: "#786395"
+    post: "#e3ae63"
+    visitor: "#d7dbe1"
+    categoryLink: "rgba(120, 99, 149, 0.72)"
+    referenceLink: "rgba(150, 158, 170, 0.42)"

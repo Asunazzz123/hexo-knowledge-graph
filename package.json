@@ -1,0 +1,37 @@
+{
+  "name": "hexo-knowledge-graph",
+  "version": "0.1.0",
+  "description": "Interactive category and post-link knowledge graph for Hexo",
+  "keywords": [
+    "hexo",
+    "knowledge-graph",
+    "force-graph",
+    "categories",
+    "post-link"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "files": [
+    "assets",
+    "client",
+    "lib",
+    "examples",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check index.js && node --check lib/*.js && node --check client/*.js",
+    "prepack": "npm test && npm run check"
+  },
+  "peerDependencies": {
+    "hexo": "^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "dependencies": {
+    "force-graph": "^1.51.4"
+  }
+}
