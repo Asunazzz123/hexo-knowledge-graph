@@ -262,6 +262,9 @@
   // ── Canvas rendering: Obsidian-style nodes ────────────────────
 
   function drawObsidianNode(node, ctx, globalScale, state) {
+    // Skip rendering during initial simulation when coordinates may be non-finite
+    if (!isFinite(node.x) || !isFinite(node.y)) return;
+
     var radius = resolveNodeRadius(node);
     var isHovered = state.hoveredNode === node.id;
     var isSelected = state.selectedNode === node.id;
@@ -574,6 +577,10 @@
           throw new Error("Knowledge graph data request failed: " + response.status);
         }
         return response.json();
+      }).catch(function (error) {
+        // Don't cache failed requests so they can be retried
+        graphDataCache.delete(url);
+        throw error;
       }));
     }
     return graphDataCache.get(url);
@@ -705,23 +712,23 @@
       var charge = graphInstance.d3Force("charge");
       if (charge) {
         charge.strength(function (node) {
-          if (node.type === "category") return -140;
-          if (node.layer === "bridge") return -110;
-          return -70;
+          if (node.type === "category") return -90;
+          if (node.layer === "bridge") return -80;
+          return -60;
         });
       }
       var linkForce = graphInstance.d3Force("link");
       if (linkForce) {
         linkForce.distance(function (link) {
           if (link.type === "category") return 80;
-          if (link.type === "inter-category") return 55;
-          if (link.type === "reference") return 65;
-          return 70;
+          if (link.type === "inter-category") return 40;
+          if (link.type === "reference") return 60;
+          return 65;
         });
       }
       var center = graphInstance.d3Force("center");
       if (center) {
-        center.strength(0.10);
+        center.strength(0.14);
       }
       var collide = graphInstance.d3Force("collide");
       if (!collide && typeof graphInstance.d3Force === "function") {
@@ -782,6 +789,7 @@
     var status = element.querySelector(".hexo-knowledge-graph__status");
     var resetBtn = element.querySelector(".hexo-knowledge-graph__reset");
     var expandBtn = element.querySelector(".hexo-knowledge-graph__expand-btn");
+    var legend = element.querySelector(".hexo-knowledge-graph__legend");
     var dataUrl = element.dataset.dataUrl || options.dataUrl;
 
     element.dataset.knowledgeGraphMounted = "loading";
@@ -999,22 +1007,22 @@
                   var chargeForce = graphInstance.d3Force("charge");
                   if (chargeForce) {
                     chargeForce.strength(function (node) {
-                      if (node.type === "category") return -80;
-                      if (node.layer === "bridge") return -60;
-                      return -40;
+                      if (node.type === "category") return -50;
+                      if (node.layer === "bridge") return -40;
+                      return -25;
                     });
                   }
                   var linkForce = graphInstance.d3Force("link");
                   if (linkForce) {
                     linkForce.distance(function (link) {
-                      if (link.type === "category") return 60;
-                      if (link.type === "inter-category") return 35;
-                      if (link.type === "reference") return 45;
-                      return 40;
+                      if (link.type === "category") return 50;
+                      if (link.type === "inter-category") return 25;
+                      if (link.type === "reference") return 35;
+                      return 30;
                     });
                   }
                   var centerForce = graphInstance.d3Force("center");
-                  if (centerForce) centerForce.strength(0.18);
+                  if (centerForce) centerForce.strength(0.24);
                 }
               } catch (err) {
                 // Ignore force errors
@@ -1225,6 +1233,13 @@
             return fullGraphData;
           }
         };
+      }).catch(function (error) {
+        element.dataset.knowledgeGraphMounted = "error";
+        element.classList.add("is-error");
+        if (status) {
+          status.textContent = "知识网络加载失败：" + error.message;
+        }
+        return null;
       });
     } catch (error) {
       element.dataset.knowledgeGraphMounted = "error";

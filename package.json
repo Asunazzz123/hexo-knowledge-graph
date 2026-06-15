@@ -1,6 +1,6 @@
 {
   "name": "hexo-knowledge-graph",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Interactive category and post-link knowledge graph for Hexo",
   "keywords": [
     "hexo",
